@@ -1,7 +1,7 @@
 import Order from '../models/order.model.js';
 import Product from '../models/product.model.js';
 
-// @desc    Create new order & decrement stock
+// @desc    Create new order & decrement stock with sequential orderNumber
 // @route   POST /api/orders
 // @access  Private
 const addOrderItems = async (req, res) => {
@@ -20,8 +20,13 @@ const addOrderItems = async (req, res) => {
     throw new Error('No order items provided');
   }
 
-  // Create order
+  // 1. Find the latest order to get the highest orderNumber (Start from 1001 if none exists)
+  const lastOrder = await Order.findOne().sort({ orderNumber: -1 });
+  const nextOrderNumber = lastOrder && lastOrder.orderNumber ? lastOrder.orderNumber + 1 : 1001;
+
+  // 2. Create order with sequence
   const order = new Order({
+    orderNumber: nextOrderNumber,
     user: req.user._id,
     orderItems,
     shippingAddress,
@@ -52,11 +57,18 @@ const getMyOrders = async (req, res) => {
   res.json(orders);
 };
 
-// @desc    Get order by ID
+// @desc    Get order by ID (Supports both MongoDB ObjectId and Sequential Order Number e.g. 1001)
 // @route   GET /api/orders/:id
 // @access  Private
 const getOrderById = async (req, res) => {
-  const order = await Order.findById(req.params.id).populate('user', 'name email');
+  const inputId = req.params.id.trim();
+  let order;
+
+  if (!isNaN(inputId)) {
+    order = await Order.findOne({ orderNumber: Number(inputId) }).populate('user', 'name email');
+  } else if (inputId.match(/^[0-9a-fA-F]{24}$/)) {
+    order = await Order.findById(inputId).populate('user', 'name email');
+  }
 
   if (!order) {
     res.status(404);
@@ -77,7 +89,14 @@ const getOrderById = async (req, res) => {
 // @access  Private
 const cancelOrder = async (req, res) => {
   const { reason } = req.body;
-  const order = await Order.findById(req.params.id);
+  const inputId = req.params.id.trim();
+  let order;
+
+  if (!isNaN(inputId)) {
+    order = await Order.findOne({ orderNumber: Number(inputId) });
+  } else {
+    order = await Order.findById(inputId);
+  }
 
   if (!order) {
     res.status(404);
@@ -127,7 +146,14 @@ const getAllOrders = async (req, res) => {
 // @access  Private/Admin
 const updateOrderStatus = async (req, res) => {
   const { status, courierName, trackingNumber } = req.body;
-  const order = await Order.findById(req.params.id);
+  const inputId = req.params.id.trim();
+  let order;
+
+  if (!isNaN(inputId)) {
+    order = await Order.findOne({ orderNumber: Number(inputId) });
+  } else {
+    order = await Order.findById(inputId);
+  }
 
   if (!order) {
     res.status(404);

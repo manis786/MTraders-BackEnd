@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
+  orderNumber: { type: Number, unique: true, index: true }, // Sequential Order ID e.g. 1001, 1002...
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   orderItems: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -30,10 +31,10 @@ const orderSchema = new mongoose.Schema({
     default: 'Pending Approval'
   },
   deliveryStatus: {
-  type: String,
-  enum: ['Pending', 'Processing', 'Shipped', 'Delivered'],
-  default: 'Pending'
-},
+    type: String,
+    enum: ['Pending', 'Processing', 'Shipped', 'Delivered'],
+    default: 'Pending'
+  },
   cancellationReason: { type: String, default: null },
 
   // Logistics & Tracking Details (Filled by Admin on Dispatch)
