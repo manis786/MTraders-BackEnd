@@ -9,6 +9,7 @@ import userRoutes from './routes/user.route.js';
 import productRoutes from './routes/product.route.js';
 import orderRoutes from './routes/order.route.js';
 import expenseRoutes from './routes/expense.route.js';
+import aiRoutes from './routes/ai.route.js';
 
 // Middleware Imports
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
@@ -42,6 +43,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/', (req, res) => {
   res.send('Memon Traders Backend API is running successfully...');
